@@ -1,26 +1,26 @@
-# 🌤️ Sistema de Alertas Climáticos
+# 🌤️ Sistema de Monitoramento de Riscos Climáticos
 
 ## 📌 Descrição Geral
 
-Este é um **sistema de detecção de riscos climáticos** desenvolvido em Python que consome dados da **OpenWeatherMap API** para identificar condições adversas nos próximos 5 dias. Ele oferece uma interface no terminal com opções interativas para verificar:
+Este é um **sistema interativo de detecção de riscos climáticos** desenvolvido em Python que consome dados da **OpenWeatherMap API** para identificar condições adversas nos próximos 5 dias. Com base nas previsões, o programa permite ao usuário verificar:
 
-- ⚡ Trovoadas
-- 💨 Vento forte
-- ❄️ Geada / Temperaturas negativas
+- ⚡ Raios e tempestades
+- 💨 Vento forte (> 50 km/h)
+- ❄️ Geada / temperaturas negativas
 - 💧 Enchentes ou chuva intensa
 - ☀️ Seca prolongada e ondas de calor
-- 🔥 Risco indireto de incêndios florestais
+- 🔥 Risco de incêndios florestais
 
-O objetivo do projeto é demonstrar como é possível usar previsões climáticas para **prever e alertar sobre eventos climáticos adversos**, usando apenas as informações disponíveis na API OpenWeatherMap (plano gratuito).
+O objetivo é demonstrar como podemos usar previsões climáticas para **prever e alertar sobre eventos climáticos adversos**, com uma interface simples no terminal.
 
 ---
 
 ## 🎯 Objetivo do Projeto
 
-- Entender e consumir dados de uma API pública de clima (OpenWeatherMap)
+- Consumir dados da OpenWeatherMap API
 - Detectar automaticamente condições climáticas adversas
 - Apresentar alertas claros ao usuário via terminal
-- Mostrar boas práticas de programação modular e organização de código
+- Organizar o código usando boas práticas de modularização
 - Estudar análise de risco com base em condições meteorológicas
 
 Ideal tanto para **projetos acadêmicos** quanto para sistemas simples de apoio à agricultura, segurança ambiental ou planejamento urbano.
@@ -31,45 +31,42 @@ Ideal tanto para **projetos acadêmicos** quanto para sistemas simples de apoio 
 
 ### 🔁 Estrutura Modular
 
-Cada tipo de alerta foi implementado como uma função separada, permitindo futura modularização em arquivos independentes. As principais funções incluem:
+Cada tipo de alerta foi implementado como uma função separada dentro da pasta `forecast/`, permitindo fácil manutenção e expansão futura. As principais funções são:
 
-| Função | Descrição |
-|-------|-----------|
-| `check_thunderstorms()` | Verifica se há trovoadas nas próximas 24h |
-| `check_strong_wind()` | Detecta vento acima de 50 km/h |
-| `check_frost()` | Analisa dias seguidos com geada |
-| `check_floods()` | Avalia chuvas fortes (> 50 mm) e alta probabilidade de chuva |
-| `check_drought()` | Detecta períodos secos + calor intenso |
-| `check_wildfire_risk()` | Calcula risco de incêndio com base em temperatura, umidade, vento e precipitação |
+| Arquivo | Função | Descrição |
+|--------|--------|-----------|
+| `trovoadas.py` | `verificar_trovoadas()` | Verifica se há trovoadas nas previsões |
+| `vento.py` | `verificar_vento_forte()` | Detecta vento acima de 50 km/h |
+| `geada.py` | `verificar_geada()` | Analisa previsão de geada |
+| `enchentes.py` | `verificar_enchentes()` | Avalia chuvas fortes e risco de inundação |
+| `seca_ondas_de_calor.py` | `verificar_clima_seco_e_quente()` | Identifica períodos secos com alta temperatura |
+| `incendios.py` | `verificar_risco_incendio()` | Calcula risco de incêndio com base em clima |
 
-Todas essas funções recebem o objeto `weather_data`, extraído da resposta da API, e analisam os dados conforme critérios específicos.
+Todas essas funções recebem o objeto `dados_climaticos`, extraído da resposta da API, e analisam os dados conforme critérios específicos.
 
 ---
 
 ## 🧮 Lógica de Detecção de Riscos
 
-O projeto usa **critérios técnicos** para detectar cada risco. Exemplo:
+O projeto usa **critérios técnicos** para detectar cada risco. Alguns exemplos:
 
 ### 1. **Vento forte**
 - Velocidade > 50 km/h
-- Baseado no campo `wind.speed` (em m/s)
+- Baseado no campo `wind.speed` (em m/s → convertido)
 
 ### 2. **Geada**
 - Temperatura mínima < 0°C
 - Tempo limpo ou nublado (`clear sky`, `few clouds`, etc.)
-- Baseado no campo `main.temp_min`
 
 ### 3. **Seca + Onda de Calor**
 - Baixa probabilidade de chuva (`pop < 0.1`)
 - Alta temperatura máxima (`temp_max >= 30°C`)
-- Análise por dias consecutivos
 
-### 4. **Risco de Incêndio (indireto)**
+### 4. **Risco de Incêndio**
 - Temperatura > 35°C
 - Umidade média < 40%
 - Vento > 30 km/h
 - Baixa chance de chuva (`pop < 0.1`)
-- Score de risco calculado por dia
 
 ---
 
@@ -78,51 +75,41 @@ O projeto usa **critérios técnicos** para detectar cada risco. Exemplo:
 - Python 3.x
 - Bibliotecas:
   - `requests` – Para requisições HTTP
-  - `datetime` – Manipulação de datas
-  - `collections.defaultdict` – Agrupamento de dados por dia
   - `os` – Limpeza de tela no terminal
 
 ```bash
-pip install requests python-dotenv
+pip install requests
 ```
 
-Se você estiver usando `.env` para ocultar sua chave da API, também instale:
-
-```bash
-pip install python-dotenv
-```
+> ⚠️ A chave da API deve ser inserida diretamente no arquivo `__main__.py`.
 
 ---
 
 ## 🧪 Como o Projeto Trabalha com Dados Horários
 
-A OpenWeatherMap retorna dados a cada 3 horas (`list`), totalizando até 40 registros (5 dias × 8 horários/dia). O projeto agrupa esses dados por dia e aplica lógica de análise diária para evitar falso positivo com base em apenas 1 ou 2 períodos.
+A OpenWeatherMap retorna dados a cada 3 horas (`list`), totalizando até 40 registros (5 dias × 8 horários/dia). O projeto analisa esses dados diretamente, sem agrupamento por dia, mostrando as condições mais críticas encontradas.
 
 Exemplo:
 ```python
-for forecast in weather_data['list'][:8]:  # Próximas 24h
+for forecast in dados_climaticos['list'][:8]:  # Próximas 24h
     ...
 ```
 
 ---
 
-## 🧩 Arquitetura do Código
-
-O projeto segue uma abordagem **modular e estruturada**, onde cada tipo de alerta tem seu próprio arquivo e pode ser reutilizado ou expandido facilmente.
-
-Estrutura atual:
+## 🧩 Estrutura do Projeto
 
 ```
-main.py                  # Menu principal e controle
-forecast/
-    thunderstorms.py     # Alerta de trovoadas
-    wind.py              # Alerta de vento forte
-    frost.py             # Alerta de geada
-    floods.py            # Alerta de enchentes
-    drought_heatwave.py  # Alerta de seca e calor
-    wildfire.py          # Risco de incêndios
-requirements.txt         # Dependências do projeto
-README.md                # Este documento
+risco-climatico/
+├── main.py                  # Menu principal e controle
+├── forecast/
+│   ├── trovoadas.py         # Alerta de trovoadas
+│   ├── vento.py             # Alerta de vento forte
+│   ├── geada.py             # Alerta de geada
+│   ├── enchentes.py         # Alerta de enchentes
+│   ├── seca_ondas_de_calor.py # Alerta de seca e calor
+│   └── incendios.py         # Alerta de incêndios
+└── README.md                # Este documento
 ```
 
 ---
@@ -130,54 +117,44 @@ README.md                # Este documento
 ## 🧪 Exemplo de Saída
 
 ```
-🌦️ Choose the weather risks you want to monitor:
-[1] ⚡ Thunderstorms / Lightning
-[2] 💨 Strong Winds (> 50 km/h)
-[3] ❄️ Frost / Freezing Temperatures
-[4] 💧 Floods / Heavy Rainfall
-[5] ☀️ Dry & Hot Weather Risk (Heatwave + Drought)
-[6] 🔥 Wildfire Risk (indirect detection)
-[7] 🌍 Monitor All Risks
-[8] ❌ Finish
+🌦️ Selecione os riscos climáticos que deseja monitorar:
+[1] ⚡ Raios e Tempestades
+[2] 💨 Ventos Fortes (acima de 50 km/h)
+[3] ❄️ Geada / Temperaturas Congelantes
+[4] 💧 Inundações / Chuvas Intensas
+[5] ☀️ Clima Seco e Quente (Onda de Calor e Seca)
+[6] 🔥 Risco de Incêndios Florestais
+[7] 🌍 Monitorar Todos os Riscos
+[8] ❌ Encerrar Programa
 ```
 
 Ao selecionar uma opção, o programa imprime alertas como:
 
 ```
-⚠️ HIGH WIND SPEED: Wind of 59.4 km/h expected at 05/06 15:00
+⚠️ ALTA VELOCIDADE DO VENTO: 59.4 km/h previsto às 05/06 15:00
 ```
-
----
-
-## 📊 Fluxo de Execução
-
-1. O script faz uma requisição para a OpenWeatherMap API
-2. Os dados são convertidos de JSON para variáveis manipuláveis
-3. Cada função analisa os dados sob um critério específico
-4. Alertas são exibidos no terminal com base na previsão
-5. O usuário pode navegar entre as opções via menu
 
 ---
 
 ## 📁 Funções Principais Explicadas
 
-### 1. `check_thunderstorms()`
-Detecta trovoadas com base no campo `weather.main`.
+### 1. `verificar_trovoadas()`
+Detecta trovoadas com base no campo `weather.description`.
 
-### 2. `check_strong_wind()`
+### 2. `verificar_vento_forte()`
 Converte `wind.speed` de `m/s` para `km/h` e avisa se > 50 km/h.
 
-### 3. `check_frost()`
-Agrupa previsões por dia e verifica temperaturas mínimas com tempo claro/nublado.
+### 3. `verificar_geada()`
+Verifica temperaturas mínimas abaixo de 0°C com tempo claro/nublado.
 
-### 4. `check_floods()`
-Verifica volume de chuva (`rain.3h`) e chance de chuva (`pop`) para alertar sobre enchentes.
+### 4. `verificar_enchentes()`
+Analisa volume de chuva (`rain.3h`) e chance de chuva (`pop`) para alertar sobre enchentes.
 
-### 5. `check_dry_and_hot_weather()`
+### 5. `verificar_clima_seco_e_quente()`
 Combina baixa precipitação e alta temperatura para indicar seca ou onda de calor.
 
-### 6. `check_wildfire_risk()`
-Calcula um score de risco com base em:
+### 6. `verificar_risco_incendio()`
+Calcula risco com base em:
 - Temperatura alta
 - Umidade baixa
 - Vento forte
@@ -191,21 +168,26 @@ Calcula um score de risco com base em:
 - ✅ Interface interativa no terminal
 - ✅ Fácil expansão para outros tipos de risco
 - ✅ Boa prática de tratamento de erros e validação de campos
-- ✅ Um otímo alertas de riscos
 
 ---
 
-## 👨‍🏫 Integrantes
+## 👨‍🏫 Integrante
 
-Integrantes desse projeto:
-
-- **Nome:** Leonardo Lopes rm:565437
+- **Leonardo Lopes** RM: 565437
+- **Giovanni de Lela** RM - 563066
+- **Gabriel Nakamura** RM - 562221
 
 
 ---
 
 ## 🧾 Créditos
 
-Desenvolvido como parte de um projeto acadêmico pela disciplina Soluções Energeticas, ministrada pelo professor André, na instituição FIAP.
+Desenvolvido como parte de um projeto acadêmico pela disciplina **Soluções Energéticas**, ministrada pelo professor **André**, na instituição **FIAP**.
+
+---
+
+## 📬 Contato
+
+Se quiser entrar em contato ou contribuir com melhorias, fique à vontade!
 
 ---
